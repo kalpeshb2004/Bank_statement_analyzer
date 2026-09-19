@@ -12,6 +12,8 @@ from src.report_generator import generate_pdf_report
 from src.pdf_parser import extract_account_details
 from src.db_operations import save_to_database
 
+from src.database import SessionLocal, User, Statement, Transaction
+
 # ---------- App banao (SIRF EK BAAR) ----------
 app = FastAPI(title="Personal Finance Bot API")
 
@@ -96,3 +98,38 @@ async def upload_statement(file: UploadFile = File(...)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail="Something went wrong while processing this statement. Please try again.")
+
+@app.get("/history")
+def get_history():
+    session = SessionLocal()
+    try:
+        statements = (
+            session.query(Statement, User)
+            .join(User, Statement.user_id == User.id)
+            .order_by(Statement.uploaded_at.desc())
+            .all()
+        )
+        
+        result = []
+        for stmt, user in statements:
+            spend = (
+                session.query(Transaction)
+                .filter(Transaction.statement_id == stmt.id)
+                .filter(Transaction.category != "Person Transfer")
+                .filter(Transaction.withdrawal > 0)
+                .all()
+            )
+            total_spend = sum(t.withdrawal for t in spend)
+            
+            result.append({
+                "statement_id": stmt.id,
+                "file_name": stmt.file_name,
+                "uploaded_at": stmt.uploaded_at.strftime("%d %b %Y, %I:%M %p"),
+                "user_name": user.name,
+                "total_transactions": stmt.total_transactions,
+                "total_spend": total_spend,
+            })
+        
+        return {"history": result}
+    finally:
+        session.close()
