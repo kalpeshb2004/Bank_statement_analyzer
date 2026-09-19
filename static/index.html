@@ -12,142 +12,158 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="topbar__mark">FB</div>
-      <div class="topbar__title">
-        <h1>Finance Bot</h1>
-        <p>Passbook-style statement analysis</p>
-      </div>
-    </header>
+    <div class="app-shell">
 
-    <main class="wrap">
-      <!-- ---------- Upload card ---------- -->
-      <section class="passbook" id="uploadCard">
-        <div class="passbook__header">
-          <span class="eyebrow">Step 01</span>
-          <h2>Insert your statement</h2>
-          <p>
-            Upload a bank statement PDF. Nothing leaves your machine except this
-            file.
-          </p>
+      <!-- ---------- Sidebar ---------- -->
+      <aside class="sidebar">
+        <div class="sidebar__brand">
+          <div class="topbar__mark">FB</div>
+          <div>
+            <h1>Finance Bot</h1>
+          </div>
         </div>
 
-        <div class="perforation" aria-hidden="true"></div>
+        <button class="btn btn--primary sidebar__new" id="newAnalysisBtn">+ New Analysis</button>
 
-        <div class="passbook__body">
-          <label for="fileInput" class="dropzone" id="dropzone">
-            <span class="dropzone__icon">⤓</span>
-            <span class="dropzone__text" id="dropzoneText"
-              >Choose a PDF, or drag it here</span
-            >
-            <input type="file" id="fileInput" accept="application/pdf" hidden />
-          </label>
-          <button class="btn btn--primary" id="analyzeBtn" disabled>
-            Analyze statement
-          </button>
+        <div class="sidebar__section-label">History</div>
+        <div class="sidebar__history" id="sidebarHistory">
+          <p class="sidebar__empty">Loading...</p>
         </div>
-      </section>
+      </aside>
 
-      <!-- ---------- Loading state ---------- -->
-      <section class="state state--loading" id="loadingState" hidden>
-        <div class="stamp-spin" aria-hidden="true"></div>
-        <p>Reading entries, sorting the ledger…</p>
-      </section>
+      <!-- ---------- Main content ---------- -->
+      <main class="wrap">
 
-      <!-- ---------- Error state ---------- -->
-      <section class="state state--error" id="errorState" hidden>
-        <p class="state__title">Could not read this statement</p>
-        <p id="errorMessage">Something went wrong.</p>
-        <button class="btn btn--ghost" id="retryBtn">Try another file</button>
-      </section>
-
-      <!-- ---------- Results ---------- -->
-      <section class="results" id="results" hidden>
-        <div class="passbook passbook--summary">
+        <!-- ---------- Upload card ---------- -->
+        <section class="passbook" id="uploadCard">
           <div class="passbook__header">
-            <span class="eyebrow">Account holder</span>
-            <h2 id="accName">—</h2>
-            <p id="accDetails">—</p>
+            <span class="eyebrow">Step 01</span>
+            <h2>Insert your statement</h2>
+            <p>
+              Upload a bank statement PDF. Nothing leaves your machine except this
+              file.
+            </p>
           </div>
-          <div class="perforation" aria-hidden="true"></div>
-          <div class="stat-row">
-            <div class="stat">
-              <span class="stat__label">Total spending</span>
-              <span class="stat__value" id="statSpend">—</span>
-            </div>
-            <div class="stat">
-              <span class="stat__label">Transactions</span>
-              <span class="stat__value" id="statTxns">—</span>
-            </div>
-            <div class="stat">
-              <span class="stat__label">Sent to people</span>
-              <span class="stat__value" id="statSent">—</span>
-            </div>
-            <div class="stat">
-              <span class="stat__label">Received from people</span>
-              <span class="stat__value" id="statReceived">—</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="grid-2">
-          <div class="passbook">
-            <div class="passbook__header passbook__header--tight">
-              <span class="eyebrow">Ledger</span>
-              <h3>Category breakdown</h3>
+          <div class="perforation" aria-hidden="true"></div>
+
+          <div class="passbook__body">
+            <label for="fileInput" class="dropzone" id="dropzone">
+              <span class="dropzone__icon">⤓</span>
+              <span class="dropzone__text" id="dropzoneText"
+                >Choose a PDF, or drag it here</span
+              >
+              <input type="file" id="fileInput" accept="application/pdf" hidden />
+            </label>
+            <button class="btn btn--primary" id="analyzeBtn" disabled>
+              Analyze statement
+            </button>
+          </div>
+        </section>
+
+        <!-- ---------- Loading state ---------- -->
+        <section class="state state--loading" id="loadingState" hidden>
+          <div class="stamp-spin" aria-hidden="true"></div>
+          <p>Reading entries, sorting the ledger…</p>
+        </section>
+
+        <!-- ---------- Error state ---------- -->
+        <section class="state state--error" id="errorState" hidden>
+          <p class="state__title">Could not read this statement</p>
+          <p id="errorMessage">Something went wrong.</p>
+          <button class="btn btn--ghost" id="retryBtn">Try another file</button>
+        </section>
+
+        <!-- ---------- Results ---------- -->
+        <section class="results" id="results" hidden>
+          <div class="passbook passbook--summary">
+            <div class="passbook__header">
+              <span class="eyebrow">Account holder</span>
+              <h2 id="accName">—</h2>
+              <p id="accDetails">—</p>
             </div>
-            <table class="ledger-table" id="categoryTable">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <div class="perforation" aria-hidden="true"></div>
+            <div class="stat-row">
+              <div class="stat">
+                <span class="stat__label">Total spending</span>
+                <span class="stat__value" id="statSpend">—</span>
+              </div>
+              <div class="stat">
+                <span class="stat__label">Transactions</span>
+                <span class="stat__value" id="statTxns">—</span>
+              </div>
+              <div class="stat">
+                <span class="stat__label">Sent to people</span>
+                <span class="stat__value" id="statSent">—</span>
+              </div>
+              <div class="stat">
+                <span class="stat__label">Received from people</span>
+                <span class="stat__value" id="statReceived">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="passbook">
+              <div class="passbook__header passbook__header--tight">
+                <span class="eyebrow">Ledger</span>
+                <h3>Category breakdown</h3>
+              </div>
+              <table class="ledger-table" id="categoryTable">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="passbook">
+              <div class="passbook__header passbook__header--tight">
+                <span class="eyebrow">Visual</span>
+                <h3>Where it went</h3>
+              </div>
+              <img
+                class="chart-img"
+                id="pieChart"
+                src=""
+                alt="Spending by category pie chart"
+              />
+            </div>
           </div>
 
           <div class="passbook">
             <div class="passbook__header passbook__header--tight">
               <span class="eyebrow">Visual</span>
-              <h3>Where it went</h3>
+              <h3>Spending by category</h3>
             </div>
             <img
-              class="chart-img"
-              id="pieChart"
+              class="chart-img chart-img--wide"
+              id="barChart"
               src=""
-              alt="Spending by category pie chart"
+              alt="Spending by category bar chart"
             />
           </div>
-        </div>
 
-        <div class="passbook">
-          <div class="passbook__header passbook__header--tight">
-            <span class="eyebrow">Visual</span>
-            <h3>Spending by category</h3>
+          <div class="actions">
+            
+              class="btn btn--primary"
+              id="downloadBtn"
+              href="/download-report"
+              download
+              >Download full PDF report</a
+            >
+            <button class="btn btn--ghost" id="newUploadBtn">
+              Analyze another statement
+            </button>
           </div>
-          <img
-            class="chart-img chart-img--wide"
-            id="barChart"
-            src=""
-            alt="Spending by category bar chart"
-          />
-        </div>
+        </section>
 
-        <div class="actions">
-          <a
-            class="btn btn--primary"
-            id="downloadBtn"
-            href="/download-report"
-            download
-            >Download full PDF report</a
-          >
-          <button class="btn btn--ghost" id="newUploadBtn">
-            Analyze another statement
-          </button>
-        </div>
-      </section>
-    </main>
+      </main>
+
+    </div>
 
     <script src="/static/script.js"></script>
   </body>
