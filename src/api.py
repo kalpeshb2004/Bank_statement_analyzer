@@ -195,3 +195,25 @@ def get_statement(statement_id: int):
         }
     finally:
         session.close()
+
+@app.delete("/statement/{statement_id}")
+def delete_statement(statement_id: int):
+    session = SessionLocal()
+    try:
+        statement = session.query(Statement).filter(Statement.id == statement_id).first()
+        if not statement:
+            raise HTTPException(status_code=404, detail="Statement not found")
+        
+        # Pehle transactions delete karo (foreign key constraint ki wajah se, pehle child rows)
+        session.query(Transaction).filter(Transaction.statement_id == statement_id).delete()
+        
+        # Fir statement delete karo
+        session.query(Statement).filter(Statement.id == statement_id).delete()
+        
+        session.commit()
+        return {"success": True, "message": f"Statement {statement_id} deleted"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        session.close()

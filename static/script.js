@@ -15,46 +15,44 @@ let selectedFile = null;
 fileInput.addEventListener("change", () => {
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    
+
     if (file.type !== "application/pdf") {
       dropzoneText.textContent = "Please select a PDF file only";
       analyzeBtn.disabled = true;
       selectedFile = null;
       return;
     }
-    
-    if (file.size > 10 * 1024 * 1024) {  // 10MB limit
+
+    if (file.size > 10 * 1024 * 1024) {
       dropzoneText.textContent = "File too large (max 10MB)";
       analyzeBtn.disabled = true;
       selectedFile = null;
       return;
     }
-    
+
     selectedFile = file;
     dropzoneText.textContent = selectedFile.name;
     analyzeBtn.disabled = false;
   }
 });
 
-// Drag and drop support
 ["dragover", "dragenter"].forEach((evt) =>
   dropzone.addEventListener(evt, (e) => {
     e.preventDefault();
   }),
 );
 
-
 dropzone.addEventListener("drop", (e) => {
   e.preventDefault();
   if (e.dataTransfer.files.length > 0) {
     const file = e.dataTransfer.files[0];
-    
+
     if (file.type !== "application/pdf") {
       dropzoneText.textContent = "Please select a PDF file only";
       analyzeBtn.disabled = true;
       return;
     }
-    
+
     fileInput.files = e.dataTransfer.files;
     selectedFile = file;
     dropzoneText.textContent = selectedFile.name;
@@ -68,7 +66,7 @@ analyzeBtn.addEventListener("click", async () => {
   uploadCard.hidden = true;
   errorState.hidden = true;
   loadingState.hidden = false;
-  window.scrollTo({ top: 0, behavior: "smooth" });   // <- naya (loading state dikhane se pehle upar)
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   const formData = new FormData();
   formData.append("file", selectedFile);
@@ -103,6 +101,12 @@ function resetToUpload() {
   fileInput.value = "";
   dropzoneText.textContent = "Choose a PDF, or drag it here";
   analyzeBtn.disabled = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  activeStatementId = null;
+  document
+    .querySelectorAll(".sidebar__item")
+    .forEach((el) => el.classList.remove("sidebar__item--active"));
 }
 
 function formatRupees(amount) {
@@ -144,22 +148,9 @@ function renderResults(data) {
     tbody.appendChild(row);
   }
 
-  // Cache-bust so a re-uploaded statement shows fresh charts, not the browser's cached image
   const ts = Date.now();
   document.getElementById("pieChart").src = `/reports/category_pie.png?t=${ts}`;
   document.getElementById("barChart").src = `/reports/category_bar.png?t=${ts}`;
-}
-
-// Auto-scroll add karo
-function resetToUpload() {
-  resultsSection.hidden = true;
-  errorState.hidden = true;
-  uploadCard.hidden = false;
-  selectedFile = null;
-  fileInput.value = "";
-  dropzoneText.textContent = "Choose a PDF, or drag it here";
-  analyzeBtn.disabled = true;
-  window.scrollTo({ top: 0, behavior: "smooth" });   // <- naya
 }
 
 async function loadSidebarHistory() {
@@ -167,34 +158,44 @@ async function loadSidebarHistory() {
   try {
     const response = await fetch("/history");
     const data = await response.json();
-    
+
     if (!data.history || data.history.length === 0) {
       container.innerHTML = '<p class="sidebar__empty">No statements yet</p>';
       return;
     }
-    
+
     container.innerHTML = "";
     for (const item of data.history) {
       const div = document.createElement("div");
       div.className = "sidebar__item";
+      div.dataset.statementId = item.statement_id;
       div.innerHTML = `
-        <span class="sidebar__item-name">${item.user_name || "Unknown"}</span>
-        <span class="sidebar__item-meta">${item.uploaded_at} · ${formatRupees(item.total_spend)}</span>
+        <div class="sidebar__item-row">
+          <div class="sidebar__item-info">
+            <span class="sidebar__item-name">${item.user_name || "Unknown"}</span>
+            <span class="sidebar__item-meta">${item.uploaded_at} · ${formatRupees(item.total_spend)}</span>
+          </div>
+          <button class="sidebar__menu-btn" title="Options">⋮</button>
+        </div>
       `;
+
+      div.addEventListener("click", () => loadStatement(item.statement_id));
+
+      const menuBtn = div.querySelector(".sidebar__menu-btn");
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openContextMenu(menuBtn, item.statement_id);
+      });
+
       container.appendChild(div);
     }
-      
-    div.addEventListener("click", () => loadStatement(item.statement_id));
-      container.appendChild(div);
-      
   } catch (err) {
-    container.innerHTML = '<p class="sidebar__empty">Could not load history</p>';
+    container.innerHTML =
+      '<p class="sidebar__empty">Could not load history</p>';
   }
 }
 
-document.getElementById("newAnalysisBtn").addEventListener("click", resetToUpload);
-
-loadSidebarHistory();
+let activeStatementId = null;
 
 async function loadStatement(id) {
   uploadCard.hidden = true;
@@ -210,9 +211,77 @@ async function loadStatement(id) {
     renderResults(data);
     loadingState.hidden = true;
     resultsSection.hidden = false;
+
+    activeStatementId = id;
+    highlightActiveSidebarItem();
   } catch (err) {
     loadingState.hidden = true;
     errorMessage.textContent = err.message;
     errorState.hidden = false;
   }
 }
+
+function highlightActiveSidebarItem() {
+  document.querySelectorAll(".sidebar__item").forEach((el) => {
+    el.classList.toggle(
+      "sidebar__item--active",
+      el.dataset.statementId == activeStatementId,
+    );
+  });
+}
+
+document
+  .getElementById("newAnalysisBtn")
+  .addEventListener("click", resetToUpload);
+
+loadSidebarHistory();
+
+let activeContextMenu = null;
+
+function closeContextMenu() {
+  if (activeContextMenu) {
+    activeContextMenu.remove();
+    activeContextMenu = null;
+  }
+}
+
+function openContextMenu(anchorBtn, statementId) {
+  closeContextMenu();
+
+  const rect = anchorBtn.getBoundingClientRect();
+  const menu = document.createElement("div");
+  menu.className = "context-menu";
+  menu.style.top = `${rect.bottom + 4}px`;
+  menu.style.left = `${rect.right - 150}px`;
+
+  menu.innerHTML = `
+    <button class="context-menu__item context-menu__item--danger">
+      <span>🗑</span> Delete
+    </button>
+  `;
+
+  menu
+    .querySelector(".context-menu__item--danger")
+    .addEventListener("click", async (e) => {
+      e.stopPropagation();
+      closeContextMenu();
+
+      if (!confirm("Delete this statement? This cannot be undone.")) return;
+
+      try {
+        const res = await fetch(`/statement/${statementId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        loadSidebarHistory();
+        resetToUpload();
+      } catch (err) {
+        alert("Could not delete this statement.");
+      }
+    });
+
+  document.body.appendChild(menu);
+  activeContextMenu = menu;
+}
+
+document.addEventListener("click", closeContextMenu);
