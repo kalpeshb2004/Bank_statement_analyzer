@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import shutil
 import os
+import pandas as pd
 
 from src.data_loader import load_and_clean
 from src.categorizer import categorize_dataframe
@@ -131,5 +132,66 @@ def get_history():
             })
         
         return {"history": result}
+    finally:
+        session.close()
+
+@app.get("/statement/{statement_id}")
+def get_statement(statement_id: int):
+    session = SessionLocal()
+    try:
+        statement = session.query(Statement).filter(Statement.id == statement_id).first()
+        if not statement:
+            raise HTTPException(status_code=404, detail="Statement not found")
+        
+        user = session.query(User).filter(User.id == statement.user_id).first()
+        transactions = session.query(Transaction).filter(Transaction.statement_id == statement_id).all()
+        
+        # DB rows se pandas DataFrame banao (jaisa fresh upload mein banta hai)
+        rows = []
+        for t in transactions:
+            rows.append({
+                "Date": t.date,
+                "Description": t.description,
+                "CleanMerchant": t.clean_merchant,
+                "Category": t.category,
+                "Withdrawal": t.withdrawal,
+                "Deposit": t.deposit,
+                "Balance": t.balance,
+            })
+        df = pd.DataFrame(rows)
+        
+        account_details = {
+            "Name": user.name,
+            "AccountNo": user.account_no,
+            "BankName": user.bank_name,
+            "Branch": user.branch,
+            "IFSC": user.ifsc,
+            "Address": user.address,
+        }
+        
+        # Charts + PDF isi statement ke data se dobara banao
+        plot_category_pie(df)
+        plot_category_bar(df)
+        generate_pdf_report(df, account_details)
+        
+        spend_df = df[(df["Withdrawal"] > 0) & (df["Category"] != "Person Transfer")]
+        total_spend = float(spend_df["Withdrawal"].sum())
+        category_totals = spend_df.groupby("Category")["Withdrawal"].sum().to_dict()
+        
+        transfer_df = df[df["Category"] == "Person Transfer"]
+        total_sent = float(transfer_df["Withdrawal"].sum())
+        total_received = float(transfer_df["Deposit"].sum())
+        
+        return {
+            "success": True,
+            "account_details": account_details,
+            "summary": {
+                "total_spend": total_spend,
+                "person_transfer_sent": total_sent,
+                "person_transfer_received": total_received,
+                "total_transactions": len(df),
+            },
+            "category_breakdown": category_totals,
+        }
     finally:
         session.close()

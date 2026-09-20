@@ -161,3 +161,58 @@ function resetToUpload() {
   analyzeBtn.disabled = true;
   window.scrollTo({ top: 0, behavior: "smooth" });   // <- naya
 }
+
+async function loadSidebarHistory() {
+  const container = document.getElementById("sidebarHistory");
+  try {
+    const response = await fetch("/history");
+    const data = await response.json();
+    
+    if (!data.history || data.history.length === 0) {
+      container.innerHTML = '<p class="sidebar__empty">No statements yet</p>';
+      return;
+    }
+    
+    container.innerHTML = "";
+    for (const item of data.history) {
+      const div = document.createElement("div");
+      div.className = "sidebar__item";
+      div.innerHTML = `
+        <span class="sidebar__item-name">${item.user_name || "Unknown"}</span>
+        <span class="sidebar__item-meta">${item.uploaded_at} · ${formatRupees(item.total_spend)}</span>
+      `;
+      container.appendChild(div);
+    }
+      
+    div.addEventListener("click", () => loadStatement(item.statement_id));
+      container.appendChild(div);
+      
+  } catch (err) {
+    container.innerHTML = '<p class="sidebar__empty">Could not load history</p>';
+  }
+}
+
+document.getElementById("newAnalysisBtn").addEventListener("click", resetToUpload);
+
+loadSidebarHistory();
+
+async function loadStatement(id) {
+  uploadCard.hidden = true;
+  errorState.hidden = true;
+  resultsSection.hidden = true;
+  loadingState.hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  try {
+    const response = await fetch(`/statement/${id}`);
+    if (!response.ok) throw new Error("Could not load this statement.");
+    const data = await response.json();
+    renderResults(data);
+    loadingState.hidden = true;
+    resultsSection.hidden = false;
+  } catch (err) {
+    loadingState.hidden = true;
+    errorMessage.textContent = err.message;
+    errorState.hidden = false;
+  }
+}
