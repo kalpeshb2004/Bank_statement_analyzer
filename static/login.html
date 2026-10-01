@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in | Finance Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="/" class="brand"><span class="brand__mark">FB</span> Finance Bot</a>
+    <a href="/signup" class="nav__link">Sign up</a>
+  </header>
+
+  <main class="auth-main">
+    <section class="auth-card">
+      <h1>Welcome back.</h1>
+      <p class="sub">Log in to see your statements and spending history.</p>
+
+      <p id="error" class="form-error" role="alert" hidden></p>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn" id="submit">Log in</button>
+      </form>
+
+      <p class="switch">New here? <a href="/signup">Create an account</a></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('error');
+    const submitBtn = document.getElementById('submit');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.hidden = false;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.hidden = true;
+
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      if (!email || !password) {
+        showError('Enter your email and password.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (res.ok) {
+          window.location.href = '/app';
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        showError(typeof data.detail === 'string' ? data.detail : 'Check your details and try again.');
+      } catch (err) {
+        showError('Could not reach the server. Try again.');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log in';
+    });
+  </script>
+</body>
+</html>

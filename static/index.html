@@ -156,6 +156,18 @@
       </main>
 
     </div>
+    <div class="user-chip" id="user-chip" hidden>
+  <button type="button" class="user-chip__btn" id="user-btn" aria-haspopup="true" aria-expanded="false">
+    <span class="user-chip__avatar" id="user-avatar">?</span>
+    <span class="user-chip__name" id="user-name"></span>
+  </button>
+  <div class="user-chip__menu" id="user-menu" hidden>
+    <p class="user-chip__email" id="user-email"></p>
+    <button type="button" class="user-chip__logout" id="logout-btn">Log out</button>
+  </div>
+</div>
+
+<script src="/static/auth-guard.js"></script>
 
     <script src="/static/script.js"></script>
   </body>

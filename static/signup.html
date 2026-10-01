@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up | Finance Bot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="/" class="brand"><span class="brand__mark">FB</span> Finance Bot</a>
+    <a href="/login" class="nav__link">Log in</a>
+  </header>
+
+  <main class="auth-main">
+    <section class="auth-card">
+      <h1>Create your account.</h1>
+      <p class="sub">Free. Upload your first statement in a minute.</p>
+
+      <p id="error" class="form-error" role="alert" hidden></p>
+
+      <form id="signup-form" novalidate>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input id="name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+          <p class="hint">At least 8 characters.</p>
+        </div>
+        <div class="field">
+          <label for="confirm">Confirm password</label>
+          <input id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn" id="submit">Create account</button>
+      </form>
+
+      <p class="switch">Already have an account? <a href="/login">Log in</a></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('signup-form');
+    const errorBox = document.getElementById('error');
+    const submitBtn = document.getElementById('submit');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.hidden = false;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.hidden = true;
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      const confirm = form.confirm.value;
+
+      if (!name || !email || !password) {
+        showError('Fill in all fields.');
+        return;
+      }
+      if (password.length < 8) {
+        showError('Password must be at least 8 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showError('Passwords do not match.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        if (res.ok) {
+          window.location.href = '/app';
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        showError(typeof data.detail === 'string' ? data.detail : 'Check your details and try again.');
+      } catch (err) {
+        showError('Could not reach the server. Try again.');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create account';
+    });
+  </script>
+</body>
+</html>
