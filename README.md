@@ -45,22 +45,6 @@ Python · FastAPI · HTML/CSS/JS · MySQL · pandas · pdfplumber · reportlab �
 3. "Payment from/for" patterns without a merchant match → labeled Person Transfer
 4. Anything left over → Uncategorized
 
-finance-bot/
-├── src/
-│ ├── data_loader.py # Loads and cleans the statement
-│ ├── pdf_parser.py # Extracts transactions + account info from PDF
-│ ├── categorizer.py # Assigns categories
-│ ├── categories.py # Keyword list
-│ ├── visualizer.py # Builds charts
-│ ├── report_generator.py # Builds Excel/PDF reports
-│ ├── database.py # Database models
-│ ├── db_operations.py # Saves data to the database
-│ └── api.py # FastAPI app
-├── static/ # Frontend (landing page, app UI)
-├── certs/ # DB SSL certificate (if your MySQL host requires it)
-├── main.py # CLI entry point
-└── requirements.txt
-
 
 ## Getting Started
 
