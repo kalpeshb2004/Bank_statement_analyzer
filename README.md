@@ -1,6 +1,6 @@
 <div align="center">
 
-# 💰 Finance Bot
+# LedgerLens
 
 ### Turn a bank statement PDF into a clear spending dashboard
 
