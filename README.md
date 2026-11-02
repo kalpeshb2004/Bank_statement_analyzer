@@ -79,12 +79,6 @@ uvicorn src.api:app --reload
 
 Then open `http://127.0.0.1:8000`
 
-**Or run from the command line:**
-
-```bash
-python main.py --file "path/to/statement.pdf"
-```
-
 ## Roadmap
 
 - [ ] Login/signup
