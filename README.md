@@ -88,6 +88,12 @@ Then open `http://127.0.0.1:8000`
 
 ---
 
+## Screenshots
+
+### Landing page
+![dashboard_page](screenshots/result_Page.png)
+
 <div align="center">Made by <a href="https://github.com/kalpeshb2004">Kalpesh Bhure</a></div>
+
 
 
